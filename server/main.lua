@@ -58,28 +58,44 @@ local function get_username_from_peer(peer)
     return username;
 end
 
+local function send_all_users(data, sender)
+    if sender then
+        for peer in pairs(players) do
+            if sender == peer then goto continue end
+
+            peer:send(data);
+
+            ::continue::
+        end
+    else
+        server:broadcast(data);
+    end
+end
 
 local server_responses = {
     ["Connect"] = function(peer, data) -- Function that will be fired everytime new player joins the chat
         local username = data[2];
-    
-        print(string.format("[SERVER]: %s has connected to the chat!", username));
 
         players[peer] = username;
+
+        local data_to_send = encode_data({"Connect", username});
+        send_all_users(data_to_send, peer);
     end,
 
     ["Disconnect"] = function(peer) -- Function that will be fired everytime player leaves the chat 
         local username = get_username_from_peer(peer);
 
-        print(string.format("[SERVER]: % has disconnected from the chat!", username));
-
         players[peer] = nil;
+
+        local data_to_send = encode_data({"Disconnect", username});
+        send_all_users(data_to_send, peer);
     end,
 
     ["Receive"] = function(peer, data)
         local username = get_username_from_peer(peer);
 
-        server:broadcast(encode_data({"Receive", username, data[2]})); -- Sending message data to all the clients
+        local data_to_send = encode_data({"Receive", username, data[2]});
+        send_all_users(data_to_send);
     end,
 }
 
@@ -87,17 +103,11 @@ function love.update(dt)
     local event = server:service();
 
     while event do
-        if event.type == "connect" then
-            event.peer:timeout(32, 100, 250);
-
-        elseif event.type == "disconnect" then
-            print(string.format("%s peer disconnecting...", event.peer));
-
-        elseif event.type == "receive" then
+        if event.type == "receive" then
             local data = decode_data(event.data);
             if not data then return end
 
-            local method = data[1];
+            local method = data[1];          
             server_responses[method](event.peer, data);
         end
 

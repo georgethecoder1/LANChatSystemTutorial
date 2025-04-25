@@ -47,6 +47,13 @@ local methods = {
     end
 }
 
+function love.quit()
+    peer:send(encode_data({"Disconnect", player_username}));
+
+    host:flush();
+    return false;
+end
+
 function love.keypressed(key) -- Special detection for backspace key
     love.keyboard.setKeyRepeat(true);
 
@@ -201,10 +208,18 @@ function decode_data(data_to_decode)
 end
 
 local client_responses = {
-    ["Connect"] = function(peer, username) -- Function that will be fired everytime new player joins the chat
+    ["Connect"] = function(peer, data) -- Function that will be fired everytime new player joins the chat
+        local username = data[2];
+    
+        local content = string.format("%s has joined the chat!", username);
+        CHAT_WINDOW:addContent(content);
     end,
 
-    ["Disconnect"] = function(peer) -- Function that will be fired everytime player leaves the chat 
+    ["Disconnect"] = function(peer, data) -- Function that will be fired everytime player leaves the chat 
+        local username = data[2];
+    
+        local content = string.format("%s has left the chat!", username);
+        CHAT_WINDOW:addContent(content);
     end,
 
     ["Receive"] = function(peer, data) -- Function that will be fired everytime player receives data from the server
@@ -217,8 +232,6 @@ local client_responses = {
 }
 
 function love.update(dt)
-    --main_canvas = love.graphics.newCanvas(love.graphics.getWidth(), love.graphics.getHeight());
-
     USERNAME_INPUTBOX:updatePositionAndSize({{love.graphics.getWidth() * .5, love.graphics.getHeight() * .65}});
     CONNECT_BUTTON:updatePositionAndSize({{love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.75}});
     CHAT_INPUTBOX:updatePositionAndSize({{love.graphics.getWidth() * .5, love.graphics.getHeight()}, {3, 5}}, {love.graphics.getWidth(), 0});
@@ -231,19 +244,14 @@ function love.update(dt)
                 local data = encode_data({"Connect", player_username});
                 event.peer:send(data);
     
-                event.peer:timeout(32, 100, 250);
-    
-            elseif event.type == "disconnect" then
-                print("Client disconnecting...");
-    
             elseif event.type == "receive" then
                 local data = decode_data(event.data);
                 if not data then return end
-    
+
                 local method = data[1];
                 client_responses[method](event.peer, data);
             end
-    
+
             event = host:service();
         end
     end
