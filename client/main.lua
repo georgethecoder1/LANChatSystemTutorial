@@ -19,8 +19,10 @@ local chat_message = "";
 
 local is_connected = false;
 
-local INPUT_WINDOW_SIZE = {250 / love.graphics.getWidth(), 40 / love.graphics.getHeight()};
+local USERNAME_INPUT_WINDOW_SIZE = {250 / love.graphics.getWidth(), 40 / love.graphics.getHeight()};
 local ENTER_CHAT_BUTTON_SIZE = {150 / love.graphics.getWidth(), 40 / love.graphics.getHeight()};
+local CHAT_INPUT_WINDOW_SIZE = {love.graphics.getWidth(), 0};
+local CHAT_WINDOW_SIZE = {love.graphics.getWidth(), love.graphics.getHeight() * .75};
 
 local prevWidth = love.graphics.getWidth();
 
@@ -85,22 +87,26 @@ function love.wheelmoved(x, y)
     CHAT_WINDOW:scroll(x * -1, y * -1);
 end
 
+local function calculate_ui_size(x, y)
+    return {love.graphics.getWidth() * x, love.graphics.getHeight() * y};
+end
+
 function love.load()
-    USERNAME_INPUTBOX = inputbox.new("UsernameInputbox", {}, {.5, 0}, {{love.graphics.getWidth() * .5, love.graphics.getHeight() * .65}}, {love.graphics.getWidth() * INPUT_WINDOW_SIZE[1], love.graphics.getHeight() * INPUT_WINDOW_SIZE[2]}, love.graphics.newFont(20, "none"));
+    USERNAME_INPUTBOX = inputbox.new("UsernameInputbox", {}, {.5, 0}, {{love.graphics.getWidth() * .5, love.graphics.getHeight() * .65}}, calculate_ui_size(USERNAME_INPUT_WINDOW_SIZE[1], USERNAME_INPUT_WINDOW_SIZE[2]), love.graphics.newFont(20, "none"));
     USERNAME_INPUTBOX:setText({{1, 1, 1}, #player_username > 0 and player_username or "Enter your username..."}, 0, 0);
     USERNAME_INPUTBOX:addTextAlignment({.5, .5});
     USERNAME_INPUTBOX:setBoxScaling({1, 0});
 
-    CONNECT_BUTTON = textbutton.new("ConnectButton", {{0, 0.25, 1, 1}}, {.5, 0}, {{love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.75}}, {love.graphics.getWidth() * ENTER_CHAT_BUTTON_SIZE[1], love.graphics.getHeight() * ENTER_CHAT_BUTTON_SIZE[2]}, love.graphics.newFont(20, "none"));
+    CONNECT_BUTTON = textbutton.new("ConnectButton", {{0, 0.25, 1, 1}}, {.5, 0}, {{love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.75}}, calculate_ui_size(ENTER_CHAT_BUTTON_SIZE[1], ENTER_CHAT_BUTTON_SIZE[2]), love.graphics.newFont(20, "none"));
     CONNECT_BUTTON:setText({{1, 1, 1}, "Connect!"}, 0, 0);
     CONNECT_BUTTON:addTextAlignment({.5, .5});
 
-    CHAT_INPUTBOX = inputbox.new("ChatInputbox", {}, {.5, 1}, {{love.graphics.getWidth() * .5, love.graphics.getHeight()}, {3, 5}}, {love.graphics.getWidth(), 0}, love.graphics.newFont(18, "none"));
+    CHAT_INPUTBOX = inputbox.new("ChatInputbox", {}, {.5, 1}, {{love.graphics.getWidth() * .5, love.graphics.getHeight()}, {3, 5}}, CHAT_INPUT_WINDOW_SIZE, love.graphics.newFont(18, "none"));
     CHAT_INPUTBOX:setText({{1, 1, 1}, #chat_message > 0 and chat_message or "Enter a message here to send to chat..."}, 0, 0);
     CHAT_INPUTBOX:addTextAlignment({0, 0});
     CHAT_INPUTBOX:setBoxScaling({0, 1});
 
-    CHAT_WINDOW = scrolling_window.new("ChatWindow", {0, 0, 0, 0}, {0, 0}, {love.graphics.getWidth(), love.graphics.getHeight() * .75}, love.graphics.newFont(18, "none"));
+    CHAT_WINDOW = scrolling_window.new("ChatWindow", {0, 0, 0, 0}, {0, 0}, CHAT_WINDOW_SIZE, love.graphics.newFont(18, "none"));
 end
 
 local function accumulate_chat_message_width(message, tab)
@@ -205,11 +211,17 @@ local client_callback_list = {
     end,
 }
 
+function love.resize()
+    CHAT_WINDOW:onWindowScaled({0, 0}, {love.graphics.getWidth(), love.graphics.getHeight() * .75});
+end
+
 function love.update(dt)
     USERNAME_INPUTBOX:updatePositionAndSize({{love.graphics.getWidth() * .5, love.graphics.getHeight() * .65}});
     CONNECT_BUTTON:updatePositionAndSize({{love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.75}});
     CHAT_INPUTBOX:updatePositionAndSize({{love.graphics.getWidth() * .5, love.graphics.getHeight()}, {3, 5}}, {love.graphics.getWidth(), 0});
-    
+    CHAT_WINDOW:updatePositionAndSize({0, 0}, {love.graphics.getWidth(), love.graphics.getHeight() * .75});
+
+
     if is_connected then
         local event = host:service();
 

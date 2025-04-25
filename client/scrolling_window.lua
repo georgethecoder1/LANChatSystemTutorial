@@ -105,6 +105,17 @@ function scrolling_window:draw()
     love.graphics.setColor(prev_color[1], prev_color[2], prev_color[3], prev_color[4]);
 end
 
+function scrolling_window:onWindowScaled(pos, size)
+    self.position = pos or self.position;
+    self.size = size or self.size;
+    self.content_pos = calculate_total_scrolling_offset(self);
+end
+
+function scrolling_window:updatePositionAndSize(pos, size)
+    self.position = pos or self.position;
+    self.size = size or self.size;
+end
+
 function scrolling_window:addContent(message)
     self.content_pos = self.content_size;
 
