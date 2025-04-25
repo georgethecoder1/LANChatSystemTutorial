@@ -4,11 +4,12 @@ local enet = require("enet");
 local textbutton = require("textbutton");
 local inputbox = require("inputbox");
 local scrolling_window = require("scrolling_window");
+local serialization = require("shared.serialization");
 
 local IP_ADDRESS = "192.168.229.94";
 
 local host = enet.host_create();
-local peer = host:connect(IP_ADDRESS .. ":5000");
+local server = host:connect(IP_ADDRESS .. ":5000");
 
 local main_canvas = love.graphics.newCanvas(1920, 1080);
 local chat_canvas = love.graphics.newCanvas(1920, 1080);
@@ -42,13 +43,13 @@ local methods = {
     ["return"] = function(t)
         if #t == 0 then return end
 
-        peer:send(encode_data({"Receive", t}));
+        server:send(serialization.encode({"Receive", t}));
         return "";
     end
 }
 
 function love.quit()
-    peer:send(encode_data({"Disconnect", player_username}));
+    server:send(serialization.encode({"Disconnect", player_username}));
 
     host:flush();
     return false;
@@ -180,34 +181,7 @@ function love.draw()
     end
 end
 
-function encode_data(data_to_encode)
-    if type(data_to_encode) ~= "table" then return end
-
-    local encoded_data = "";
-
-    for i, k in pairs(data_to_encode) do
-        local data = i .. ":" .. k .. ";";
-        encoded_data = encoded_data .. data;
-    end
-
-    return encoded_data;
-end
-
-function decode_data(data_to_decode)
-    if type(data_to_decode) ~= "string" then return end
-
-    local decoded_data = {};
-
-    for line in string.gmatch(data_to_decode, "([^;]+)") do
-        local index, key = string.match(line, "([^:]+):([^:]+)");
-
-        table.insert(decoded_data, index, key);
-    end
-
-    return decoded_data;
-end
-
-local client_responses = {
+local client_callback_list = {
     ["Connect"] = function(peer, data) -- Function that will be fired everytime new player joins the chat
         local username = data[2];
     
@@ -235,21 +209,21 @@ function love.update(dt)
     USERNAME_INPUTBOX:updatePositionAndSize({{love.graphics.getWidth() * .5, love.graphics.getHeight() * .65}});
     CONNECT_BUTTON:updatePositionAndSize({{love.graphics.getWidth() * 0.5, love.graphics.getHeight() * 0.75}});
     CHAT_INPUTBOX:updatePositionAndSize({{love.graphics.getWidth() * .5, love.graphics.getHeight()}, {3, 5}}, {love.graphics.getWidth(), 0});
-
+    
     if is_connected then
         local event = host:service();
 
         while event do
             if event.type == "connect" then
-                local data = encode_data({"Connect", player_username});
+                local data = serialization.encode({"Connect", player_username});
                 event.peer:send(data);
     
             elseif event.type == "receive" then
-                local data = decode_data(event.data);
+                local data = serialization.decode(event.data);
                 if not data then return end
 
                 local method = data[1];
-                client_responses[method](event.peer, data);
+                client_callback_list[method](event.peer, data);
             end
 
             event = host:service();

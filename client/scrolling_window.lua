@@ -74,7 +74,6 @@ function scrolling_window:scroll(x, y)
     local pos = {x * sensitivity, y * sensitivity};
 
     self.content_pos = math.max(math.min(self.content_pos + pos[2], self.content_size), 0);
-    print(self.content_pos, math.max(math.min(self.content_pos + pos[2], self.content_size), 0));
 end
 
 function scrolling_window:draw()
@@ -87,7 +86,6 @@ function scrolling_window:draw()
     love.graphics.setColor(1, 1, 1, 1);
 
     local vertical_offset = 0;
-
     local scrolling_offset = calculate_total_scrolling_offset(self);
 
     for i = 1, #self.contents do
