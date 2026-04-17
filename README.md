@@ -21,7 +21,7 @@ To connect clients to the server, you need your machine's local IP (e.g., `192.1
 - **Linux/Mac**: Open Terminal and type `ifconfig` (or `ip addr`).
 
 ### 2. Configure the Client
-Open `client/main.lua` and locate the IP configuration variable. Replace the placeholder with the local IP address you found in the previous step.
+Open `client/main.lua` and locate the `IP_ADDRESS` variable. Replace the placeholder with the local IP address you found in the previous step.
 
 ### 3. Start the Server
 1. Open the `server/main.lua` file in VS Code.
