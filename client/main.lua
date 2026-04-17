@@ -6,7 +6,7 @@ local inputbox = require("inputbox");
 local scrolling_window = require("scrolling_window");
 local serialization = require("shared.serialization");
 
-local IP_ADDRESS = "192.168.0.102"; -- Add your IP address, for instance 192.168.0.2 (you can check it by using ipconfig for Windows or ifconfig for Mac/Linux)
+local IP_ADDRESS = ""; -- Add your IP address, for instance 192.168.0.2 (you can check it by using ipconfig for Windows or ifconfig for Mac/Linux)
 local PORT = "5000";
 
 local host = enet.host_create();
