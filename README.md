@@ -16,7 +16,7 @@ Before running the chat system, ensure you have the following:
 ## 🚀 Setup & Usage
 
 ### 1. Find Your Local IP Address
-To connect clients to the server, you need your machine's local IP (e.g., `192.168.x.x`).
+To connect clients to the server, you need your machine's local IP (e.g., `192.168.0.2`).
 - **Windows**: Open Command Prompt and type `ipconfig`.
 - **Linux/Mac**: Open Terminal and type `ifconfig` (or `ip addr`).
 
