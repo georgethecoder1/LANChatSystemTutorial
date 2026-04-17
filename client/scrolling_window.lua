@@ -45,7 +45,10 @@ local function calculate_lines_for_content(content, container)
 
         accumulated_width = accumulate_chat_message_width(container, tab);
 
-        if accumulated_width + 20 > love.graphics.getWidth() then real_msg = real_msg .. "\n"; table.insert(tab, accumulated_width); end
+        if accumulated_width + 20 > love.graphics.getWidth() then 
+            real_msg = real_msg .. "\n"; 
+            table.insert(tab, accumulated_width); 
+        end
     end
 
     return real_msg;
@@ -63,7 +66,6 @@ local function calculate_total_scrolling_offset(win)
     end
 
     local final_offset = math.max(scrolling_offset - win.size[2], 0);
-
     win.content_size = final_offset;
 
     return final_offset;
@@ -93,7 +95,9 @@ function scrolling_window:draw()
         local container = love.graphics.newText(self.font);
         local content = calculate_lines_for_content(self.contents[i], container);
 
-        container:set({{1, 1, 1, (vertical_offset - self.content_pos > win_size[2] or vertical_offset - self.content_pos < 0) and 0 or 1}, content}, 0, 0);
+        local alpha = (vertical_offset - self.content_pos > win_size[2] or vertical_offset - self.content_pos < 0) and 0 or 1;
+        container:set({{1, 1, 1, alpha}, content}, 0, 0);
+
         love.graphics.draw(container, 0, vertical_offset - self.content_pos);
 
         vertical_offset = vertical_offset + container:getHeight();

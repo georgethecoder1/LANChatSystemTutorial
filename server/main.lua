@@ -3,15 +3,17 @@ local enet = require("enet");
 
 local serialization = require("shared.serialization");
 
-local players = {};
+local clients = {};
 local total_joins = 0;
 
-local host = enet.host_create("*:5000");
+local PORT = "5000";
+
+local host = enet.host_create("*:" .. PORT);
 
 local function get_peer_from_username(username)
     local peer = nil;
 
-    for i, k in pairs(players) do
+    for i, k in pairs(clients) do
         if k == username then
             peer = i;
             break;
@@ -24,7 +26,7 @@ end
 local function get_username_from_peer(peer)
     local username = nil;
 
-    for i, k in pairs(players) do
+    for i, k in pairs(clients) do
         if i == peer then
             username = k;
             break;
@@ -34,9 +36,9 @@ local function get_username_from_peer(peer)
     return username;
 end
 
-local function send_all_users(data, sender)
+local function send_all_clients(data, sender)
     if sender then
-        for peer in pairs(players) do
+        for peer in pairs(clients) do
             if sender == peer then goto continue end
 
             peer:send(data);
@@ -52,34 +54,34 @@ local server_callback_list = {
     ["Connect"] = function(peer, data) -- Function that will be fired everytime new player joins the chat
         local username = data[2];
 
-        players[peer] = username;
+        clients[peer] = username;
         total_joins = total_joins + 1;
 
         local data_to_send = serialization.encode({"Connect", username});
-        send_all_users(data_to_send, peer);
+        send_all_clients(data_to_send, peer);
     end,
 
     ["Disconnect"] = function(peer) -- Function that will be fired everytime player leaves the chat 
         local username = get_username_from_peer(peer);
 
-        players[peer] = nil;
+        clients[peer] = nil;
         
         local data_to_send = serialization.encode({"Disconnect", username});
-        send_all_users(data_to_send, peer);
+        send_all_clients(data_to_send, peer);
     end,
 
     ["Receive"] = function(peer, data)
         local username = get_username_from_peer(peer);
 
         local data_to_send = serialization.encode({"Receive", username, data[2]});
-        send_all_users(data_to_send, false);
+        send_all_clients(data_to_send, false);
     end,
 }
 
-local function get_total_players()
+local function get_total_clients()
     local total = 0;
 
-    for _ in pairs(players) do
+    for _ in pairs(clients) do
         total = total + 1;
     end
 
@@ -87,12 +89,12 @@ local function get_total_players()
 end
 
 local function force_server_shutdown()
-    for peer in pairs(players) do -- Disconnects any remaining clients if there are any
-        players[peer] = nil;
+    for peer in pairs(clients) do -- Disconnects any remaining clients if there are any
+        clients[peer] = nil;
         peer:disconnect();
     end
 
-    host:destroy(); -- Destroys server (host) instance
+    host:destroy(); -- Destroys server/host instance
     love.event.push("quit"); -- Pushes quit event to notify Love about abandoment
 end
 
@@ -104,17 +106,17 @@ function love.update(dt)
 
         if event and event.type == "receive" then
             local data = serialization.decode(event.data);
-            if not data then return end
+            if not data then return; end
 
             local method = data[1];          
             server_callback_list[method](event.peer, data);
         end
 
-        if total_joins > 0 and get_total_players() == 0 then
+        if total_joins > 0 and get_total_clients() == 0 then
             server_running = false;
         end
 
-        love.timer.sleep(.01);
+        love.timer.sleep(0.01);
     end
 
     force_server_shutdown();

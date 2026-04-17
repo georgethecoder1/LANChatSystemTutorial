@@ -34,10 +34,10 @@ end
 local function does_mouse_hover_button(pos, size)
     local mouse_pos = {love.mouse.getX(), love.mouse.getY()};
 
-    local button_center = {pos[1] + size[1] / 2, pos[2] + size[2] / 2};
+    local button_center = {pos[1] + size[1] * 0.5, pos[2] + size[2] * 0.5};
 
-    local within_hor = math.abs(mouse_pos[1] - button_center[1]) <= size[1] * .5;
-    local within_ver = math.abs(mouse_pos[2] - button_center[2]) <= size[2] * .5;
+    local within_hor = math.abs(mouse_pos[1] - button_center[1]) <= size[1] * 0.5;
+    local within_ver = math.abs(mouse_pos[2] - button_center[2]) <= size[2] * 0.5;
 
     return within_hor and within_ver;
 end
@@ -65,7 +65,7 @@ function textbutton:draw()
 end
 
 function textbutton:onClick(f)
-    local hovers_button = does_mouse_hover_button({love.graphics.getWidth() * .5 - self.size[1] * .5, love.graphics.getHeight() * .75}, self.size);
+    local hovers_button = does_mouse_hover_button({love.graphics.getWidth() * 0.5 - self.size[1] * 0.5, love.graphics.getHeight() * 0.75}, self.size);
     local button_pressed = love.mouse.isDown(1) and hovers_button;
 
     if button_pressed then
